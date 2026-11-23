@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agent Memory LLM Wiki 與教學簡報成果入口</title>
+  <style>
+    :root {
+      --bg: #faf8f5;
+      --surface: #ffffff;
+      --soft: #f1f5f9;
+      --ink: #0f172a;
+      --muted: #475569;
+      --border: #e2e8f0;
+      --primary: #3b5bdb;
+      --primary-soft: #edf2ff;
+      --teal: #0ca678;
+      --teal-soft: #e6fcf5;
+      --amber: #d97706;
+      --amber-soft: #fffbeb;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+      line-height: 1.65;
+    }
+
+    .wrap {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 36px 24px 56px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #ffffff 0%, #edf2ff 100%);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px 36px;
+      box-shadow: 0 12px 32px rgba(15, 23, 42, 0.06);
+      margin-bottom: 28px;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      background: var(--primary);
+      color: #fff;
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 999px;
+      margin-bottom: 14px;
+      letter-spacing: 0.03em;
+    }
+
+    h1 {
+      font-size: clamp(1.7rem, 3.2vw, 2.45rem);
+      line-height: 1.25;
+      margin-bottom: 12px;
+      font-weight: 800;
+    }
+
+    .subtitle {
+      font-size: 1.05rem;
+      color: var(--muted);
+      max-width: 780px;
+      margin-bottom: 26px;
+    }
+
+    .cta-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .cta-card {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: 16px;
+      padding: 22px 24px;
+      text-decoration: none;
+      color: var(--ink);
+      transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .cta-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--primary);
+      box-shadow: 0 10px 24px rgba(59, 91, 219, 0.12);
+    }
+
+    .cta-card.teal:hover { border-color: var(--teal); box-shadow: 0 10px 24px rgba(12, 166, 120, 0.12); }
+
+    .cta-card h2 { font-size: 1.25rem; margin-bottom: 6px; color: var(--primary); }
+    .cta-card.teal h2 { color: var(--teal); }
+    .cta-card p { font-size: 0.93rem; color: var(--muted); margin-bottom: 12px; }
+    .cta-go { font-weight: 700; font-size: 0.9rem; }
+
+    .quick-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .q-pill {
+      display: inline-block;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid var(--border);
+      color: var(--ink);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .q-pill:hover { border-color: var(--primary); color: var(--primary); }
+
+    .section-title {
+      font-size: 1.35rem;
+      font-weight: 800;
+      margin: 30px 0 14px;
+    }
+
+    .papers-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+      gap: 14px;
+    }
+
+    .paper-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px 20px;
+      text-decoration: none;
+      color: var(--ink);
+      transition: border-color 0.15s;
+    }
+
+    .paper-card:hover { border-color: var(--primary); }
+
+    .venue-badge {
+      display: inline-block;
+      font-size: 0.74rem;
+      font-weight: 700;
+      padding: 2px 9px;
+      border-radius: 999px;
+      background: var(--teal-soft);
+      color: #065f46;
+      margin-bottom: 8px;
+    }
+
+    .venue-badge.preprint { background: var(--amber-soft); color: #92400e; }
+
+    .paper-card h3 { font-size: 1.05rem; margin-bottom: 6px; }
+    .paper-card p { font-size: 0.88rem; color: var(--muted); }
+
+    .workflow-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px 28px;
+      margin-top: 28px;
+    }
+
+    .metrics-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .metric-box {
+      background: var(--soft);
+      border-radius: 12px;
+      padding: 14px;
+      text-align: center;
+    }
+
+    .metric-box strong {
+      display: block;
+      font-size: 1.35rem;
+      color: var(--primary);
+    }
+
+    .metric-box span { font-size: 0.82rem; color: var(--muted); }
+
+    footer {
+      margin-top: 32px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.84rem;
+    }
+
+    @media (max-width: 780px) {
+      .cta-grid { grid-template-columns: 1fr; }
+      .metrics-row { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <span class="eyebrow">LLM Wiki × 教學 HTML 簡報</span>
+      <h1>Agent Memory（AI 代理的記憶機制）<br/>如何治好聊天機器人的「金魚腦」？</h1>
+      <p class="subtitle">
+        專為「用過 ChatGPT、想理解底層記憶原理」的同學打造的知識庫與互動簡報。
+        全站內容嚴格編譯自 6 篇已驗證之學術與系統論文，每一頁簡報皆可回溯至 Wiki 來源章節。
+      </p>
+
+      <div class="cta-grid">
+        <a class="cta-card" href="deck.html">
+          <div>
+            <h2>1. 打開教學 HTML 簡報 →</h2>
+            <p>12 頁生活化圖解教學（含書桌比喻、圖譜聯想對比、觀點衝突辨析與互動小測驗），每頁下方可直接點回對應 Wiki。</p>
+          </div>
+          <span class="cta-go">進入簡報播放（支援鍵盤 ← / → / G 總覽）</span>
+        </a>
+
+        <a class="cta-card teal" href="wiki-viewer.html?file=wiki/index.md">
+          <div>
+            <h2>2. 瀏覽 LLM Wiki 知識庫 →</h2>
+            <p>線上閱讀 19 份結構化 Wiki 頁面（知識庫總覽、6 篇單篇論文摘要、5 篇核心概念、5 篇代表系統與 2 篇跨篇綜合比較）。</p>
+          </div>
+          <span class="cta-go">開啟靜態知識庫瀏覽器</span>
+        </a>
+      </div>
+
+      <div class="quick-pills">
+        <a class="q-pill" href="wiki-viewer.html?file=wiki/syntheses/paradigm-and-tradeoff-comparison.md">六大流派與 ⚠️ 觀點差異比較</a>
+        <a class="q-pill" href="wiki-viewer.html?file=wiki/syntheses/beginner-learning-path.md">初學者五站學習路線圖</a>
+        <a class="q-pill" href="wiki-viewer.html?file=wiki/concepts/memory-taxonomy.md">CoALA 與工程分類架構</a>
+        <a class="q-pill" href="wiki-viewer.html?file=wiki/concepts/memory-operations-lifecycle.md">寫入／管理／讀取三階段</a>
+      </div>
+    </section>
+
+    <h2 class="section-title">收錄於 `raw/` 與 `wiki/` 的 6 篇核心文獻</h2>
+    <div class="papers-grid">
+      <a class="paper-card" href="wiki-viewer.html?file=wiki/papers/generative-agents-2023.md">
+        <span class="venue-badge">ACM UIST 2023 · CORE A*</span>
+        <h3>Generative Agents (2023)</h3>
+        <p>提出記憶流（Memory Stream）、近期性×重要性×相關性檢索，以及把流水帳升華成性格的反思樹。</p>
+      </a>
+
+      <a class="paper-card" href="wiki-viewer.html?file=wiki/papers/coala-2024.md">
+        <span class="venue-badge">TMLR 2024 · Featured &amp; Survey</span>
+        <h3>CoALA (2024)</h3>
+        <p>借鏡認知科學，將 Agent 記憶明確拆分為 Working、Episodic、Semantic 與 Procedural 四大模組。</p>
+      </a>
+
+      <a class="paper-card" href="wiki-viewer.html?file=wiki/papers/agent-memory-survey-2024.md">
+        <span class="venue-badge">ACM TOIS · CORE A* / JCR Q1</span>
+        <h3>LLM Agent Memory Survey (2024)</h3>
+        <p>比較文字記憶與參數記憶權衡，建立 Writing → Management（含遺忘）→ Reading 統一公式。</p>
+      </a>
+
+      <a class="paper-card" href="wiki-viewer.html?file=wiki/papers/hipporag-2024.md">
+        <span class="venue-badge">NeurIPS 2024</span>
+        <h3>HippoRAG (2024)</h3>
+        <p>模仿人腦海馬迴索引理論，結合 OpenIE 知識圖譜與 Personalized PageRank 實現單步跨文件聯想。</p>
+      </a>
+
+      <a class="paper-card" href="wiki-viewer.html?file=wiki/papers/a-mem-2025.md">
+        <span class="venue-badge">NeurIPS 2025</span>
+        <h3>A-MEM (2025)</h3>
+        <p>借鏡 Zettelkasten 卡片盒筆記法，讓 Agent 自動寫卡、建立雙向連結並回頭演化舊記憶。</p>
+      </a>
+
+      <a class="paper-card" href="wiki-viewer.html?file=wiki/papers/mem0-2025.md">
+        <span class="venue-badge preprint">arXiv Preprint 2025 · 業界生產代表</span>
+        <h3>Mem0 &amp; Mem0^g (2025)</h3>
+        <p>透過 Tool Call 執行 ADD / UPDATE / DELETE 除舊更新，在 LOCOMO 省下 &gt;90% Token 與 &gt;91% p95 延遲。</p>
+      </a>
+    </div>
+
+    <section class="workflow-card">
+      <h2>LLM Wiki 知識庫架構總覽</h2>
+      <p style="color: var(--muted); font-size: 0.93rem; margin-top: 6px;">
+        從 6 篇頂刊、頂會與業界系統論文出發，系統整理 Agent Memory 的核心概念、代表架構與跨研究觀點差異，並直接對應至 12 頁教學 HTML 簡報。
+      </p>
+      <div class="metrics-row">
+        <div class="metric-box"><strong>6 篇</strong><span>精選代表論文摘要</span></div>
+        <div class="metric-box"><strong>5 + 5 頁</strong><span>核心概念與系統架構</span></div>
+        <div class="metric-box"><strong>2 篇</strong><span>跨篇比較與學習路線</span></div>
+        <div class="metric-box"><strong>12 頁</strong><span>教學簡報 100% 附出處</span></div>
+      </div>
+    </section>
+
+    <footer>
+      Agent Memory LLM Wiki · GitHub Pages 靜態發布版
+    </footer>
+  </div>
+</body>
+</html>

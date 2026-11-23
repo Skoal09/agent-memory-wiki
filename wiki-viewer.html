@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LLM Wiki 知識庫瀏覽器 — Agent Memory</title>
+  <style>
+    :root {
+      --bg: #faf8f5;
+      --surface: #ffffff;
+      --soft: #f1f5f9;
+      --ink: #0f172a;
+      --muted: #475569;
+      --border: #e2e8f0;
+      --primary: #3b5bdb;
+      --primary-soft: #edf2ff;
+      --teal: #0ca678;
+      --teal-soft: #e6fcf5;
+      --amber: #d97706;
+      --amber-soft: #fffbeb;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+      line-height: 1.7;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 24px;
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 1rem;
+    }
+
+    .badge {
+      background: var(--teal);
+      color: #fff;
+      font-size: 0.75rem;
+      padding: 2px 9px;
+      border-radius: 999px;
+      font-weight: 700;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--ink);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    .btn-link.primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    .btn-link:hover { opacity: 0.9; border-color: var(--primary); }
+
+    .layout {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 290px 1fr;
+      gap: 24px;
+      padding: 24px;
+      align-items: start;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 72px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      max-height: calc(100vh - 96px);
+      overflow-y: auto;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.88rem;
+      margin-bottom: 14px;
+      font-family: inherit;
+    }
+
+    .nav-group { margin-bottom: 14px; }
+    .nav-group-title {
+      font-size: 0.76rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      margin-bottom: 6px;
+      padding-left: 6px;
+    }
+
+    .nav-item {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 7px 10px;
+      border: none;
+      background: transparent;
+      border-radius: 8px;
+      font-size: 0.87rem;
+      color: var(--ink);
+      cursor: pointer;
+      font-family: inherit;
+      margin-bottom: 2px;
+    }
+
+    .nav-item:hover { background: var(--soft); }
+    .nav-item.active {
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    .content-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px 38px;
+      min-height: 75vh;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+    }
+
+    .file-path-bar {
+      display: inline-block;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.8rem;
+      color: var(--primary);
+      background: var(--primary-soft);
+      padding: 3px 10px;
+      border-radius: 6px;
+      margin-bottom: 16px;
+    }
+
+    .md-body h1 { font-size: 1.75rem; margin-bottom: 14px; line-height: 1.3; }
+    .md-body h2 { font-size: 1.3rem; margin: 24px 0 10px; padding-bottom: 6px; border-bottom: 2px solid var(--soft); }
+    .md-body h3 { font-size: 1.08rem; margin: 18px 0 8px; color: var(--primary); }
+    .md-body h4 { font-size: 0.98rem; margin: 14px 0 6px; }
+    .md-body p { margin-bottom: 12px; }
+    .md-body ul, .md-body ol { margin: 8px 0 14px 22px; }
+    .md-body li { margin-bottom: 5px; }
+    .md-body hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+    .md-body blockquote {
+      border-left: 4px solid var(--primary);
+      background: var(--soft);
+      padding: 10px 14px;
+      border-radius: 0 8px 8px 0;
+      margin: 12px 0;
+      color: var(--muted);
+    }
+    .md-body code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      background: var(--soft);
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-size: 0.88em;
+    }
+    .md-body pre {
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 14px 16px;
+      border-radius: 10px;
+      overflow-x: auto;
+      margin: 12px 0;
+      font-size: 0.84rem;
+      line-height: 1.5;
+    }
+    .md-body pre code { background: transparent; padding: 0; color: inherit; }
+    .md-body a { color: var(--primary); font-weight: 600; text-decoration: none; border-bottom: 1px dashed rgba(59, 91, 219, 0.45); }
+    .md-body a:hover { border-bottom-style: solid; }
+
+    .table-wrap { overflow-x: auto; margin: 14px 0; }
+    .md-body table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    .md-body th, .md-body td {
+      border: 1px solid var(--border);
+      padding: 8px 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+    .md-body th { background: var(--soft); font-weight: 700; }
+
+    .conflict-callout {
+      background: var(--amber-soft);
+      border-left: 4px solid var(--amber);
+      padding: 10px 14px;
+      border-radius: 8px;
+      margin: 12px 0;
+    }
+
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; padding: 14px; }
+      .sidebar { position: static; max-height: none; }
+      .content-card { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="badge">LLM Wiki Browser</span>
+      <span>Agent Memory 知識庫</span>
+    </div>
+    <div class="nav-links">
+      <a class="btn-link primary" href="deck.html">打開教學 HTML 簡報</a>
+      <a class="btn-link" href="index.html">回成果首頁</a>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <input class="search-input" id="filter-input" type="search" placeholder="搜尋 Wiki 頁面名稱..." />
+      <div id="sidebar-nav"></div>
+    </aside>
+
+    <main class="content-card">
+      <div class="file-path-bar" id="current-path">wiki/index.md</div>
+      <article class="md-body" id="md-content"></article>
+    </main>
+  </div>
+
+  <script src="assets/wiki-bundle.js"></script>
+  <script>
+    (function () {
+      const files = window.WIKI_FILES || {};
+      const sidebar = document.getElementById('sidebar-nav');
+      const contentEl = document.getElementById('md-content');
+      const pathBar = document.getElementById('current-path');
+      const filterInput = document.getElementById('filter-input');
+
+      const GROUPS = [
+        {
+          title: '知識庫總覽',
+          items: [
+            ['wiki/index.md', 'Wiki 知識庫總覽 (index.md)']
+          ]
+        },
+        {
+          title: '跨篇綜合比較 (syntheses/)',
+          items: [
+            ['wiki/syntheses/paradigm-and-tradeoff-comparison.md', '六大流派與觀點差異比較'],
+            ['wiki/syntheses/beginner-learning-path.md', '初學者五站學習路線圖']
+          ]
+        },
+        {
+          title: '單篇論文摘要 (papers/ · 6 篇)',
+          items: [
+            ['wiki/papers/generative-agents-2023.md', 'Generative Agents (UIST 2023 A*)'],
+            ['wiki/papers/coala-2024.md', 'CoALA (TMLR 2024)'],
+            ['wiki/papers/agent-memory-survey-2024.md', 'Memory Survey (ACM TOIS A*)'],
+            ['wiki/papers/hipporag-2024.md', 'HippoRAG (NeurIPS 2024)'],
+            ['wiki/papers/a-mem-2025.md', 'A-MEM (NeurIPS 2025)'],
+            ['wiki/papers/mem0-2025.md', 'Mem0 / Mem0^g (arXiv 2025)']
+          ]
+        },
+        {
+          title: '核心概念頁 (concepts/)',
+          items: [
+            ['wiki/concepts/memory-taxonomy.md', '認知與實作分類架構'],
+            ['wiki/concepts/memory-stream-reflection.md', '記憶流與反思樹機制'],
+            ['wiki/concepts/memory-operations-lifecycle.md', '寫入／管理／讀取三階段'],
+            ['wiki/concepts/graph-associative-memory.md', '圖結構與聯想式記憶'],
+            ['wiki/concepts/memory-evolution.md', '卡片盒動態演化機制']
+          ]
+        },
+        {
+          title: '代表系統與架構 (entities/)',
+          items: [
+            ['wiki/entities/generative-agents.md', 'Generative Agents 系統'],
+            ['wiki/entities/coala.md', 'CoALA 認知框架'],
+            ['wiki/entities/hipporag.md', 'HippoRAG 架構'],
+            ['wiki/entities/a-mem.md', 'A-MEM 系統'],
+            ['wiki/entities/mem0.md', 'Mem0 與 Mem0^g']
+          ]
+        }
+      ];
+
+      function escapeHtml(s) {
+        return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      }
+
+      function resolveRelative(baseFile, target) {
+        if (target.startsWith('http://') || target.startsWith('https://')) return target;
+        const cleanTarget = target.split('#')[0];
+        const parts = baseFile.split('/');
+        parts.pop();
+        cleanTarget.split('/').forEach((seg) => {
+          if (!seg || seg === '.') return;
+          if (seg === '..') { if (parts.length) parts.pop(); }
+          else parts.push(seg);
+        });
+        return parts.join('/');
+      }
+
+      function inlineFormat(txt, currentFile) {
+        let out = escapeHtml(txt);
+        out = out.replace(/`([^`]+)`/g, '<code>$1</code>');
+        out = out.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+        out = out.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, href) => {
+          if (href.startsWith('http://') || href.startsWith('https://')) {
+            return '<a href="' + href + '" target="_blank" rel="noopener">' + label + '</a>';
+          }
+          const resolved = resolveRelative(currentFile, href);
+          if (files[resolved]) {
+            return '<a href="?file=' + encodeURIComponent(resolved) + '" data-wiki-link="' + resolved + '">' + label + '</a>';
+          }
+          return '<a href="' + resolved + '" target="_blank" rel="noopener">' + label + '</a>';
+        });
+        return out;
+      }
+
+      function renderMarkdown(md, currentFile) {
+        const lines = md.replace(/\r\n/g, '\n').split('\n');
+        let html = '';
+        let i = 0;
+        while (i < lines.length) {
+          const line = lines[i];
+          if (/^```/.test(line)) {
+            let code = [];
+            i++;
+            while (i < lines.length && !/^```/.test(lines[i])) {
+              code.push(escapeHtml(lines[i]));
+              i++;
+            }
+            html += '<pre><code>' + code.join('\n') + '</code></pre>';
+            i++;
+            continue;
+          }
+          if (/^---+$/.test(line.trim())) { html += '<hr/>'; i++; continue; }
+          if (/^#{1,4}\s+/.test(line)) {
+            const lvl = line.match(/^(#{1,4})/)[1].length;
+            const txt = line.replace(/^#{1,4}\s+/, '');
+            const cls = txt.includes('⚠️') ? ' class="conflict-callout"' : '';
+            html += '<h' + lvl + cls + '>' + inlineFormat(txt, currentFile) + '</h' + lvl + '>';
+            i++;
+            continue;
+          }
+          if (/^>\s*/.test(line)) {
+            let q = [];
+            while (i < lines.length && /^>\s*/.test(lines[i])) {
+              q.push(inlineFormat(lines[i].replace(/^>\s*/, ''), currentFile));
+              i++;
+            }
+            html += '<blockquote>' + q.join('<br/>') + '</blockquote>';
+            continue;
+          }
+          if (/^\|/.test(line) && i + 1 < lines.length && /^\|[\s:-]+\|/.test(lines[i + 1])) {
+            const headerCells = line.split('|').slice(1, -1).map((c) => '<th>' + inlineFormat(c.trim(), currentFile) + '</th>').join('');
+            i += 2;
+            let rows = '';
+            while (i < lines.length && /^\|/.test(lines[i])) {
+              const cells = lines[i].split('|').slice(1, -1).map((c) => '<td>' + inlineFormat(c.trim(), currentFile) + '</td>').join('');
+              rows += '<tr>' + cells + '</tr>';
+              i++;
+            }
+            html += '<div class="table-wrap"><table><thead><tr>' + headerCells + '</tr></thead><tbody>' + rows + '</tbody></table></div>';
+            continue;
+          }
+          if (/^\s*[-*]\s+/.test(line)) {
+            html += '<ul>';
+            while (i < lines.length && /^\s*[-*]\s+/.test(lines[i])) {
+              html += '<li>' + inlineFormat(lines[i].replace(/^\s*[-*]\s+/, ''), currentFile) + '</li>';
+              i++;
+            }
+            html += '</ul>';
+            continue;
+          }
+          if (/^\s*\d+\.\s+/.test(line)) {
+            html += '<ol>';
+            while (i < lines.length && /^\s*\d+\.\s+/.test(lines[i])) {
+              html += '<li>' + inlineFormat(lines[i].replace(/^\s*\d+\.\s+/, ''), currentFile) + '</li>';
+              i++;
+            }
+            html += '</ol>';
+            continue;
+          }
+          if (line.trim() === '') { i++; continue; }
+          let para = [inlineFormat(line, currentFile)];
+          i++;
+          while (i < lines.length && lines[i].trim() !== '' && !/^(#{1,4}\s|[-*]\s|\d+\.\s|>\s|\||```|---+$)/.test(lines[i])) {
+            para.push(inlineFormat(lines[i], currentFile));
+            i++;
+          }
+          const joined = para.join(' ');
+          if (joined.includes('⚠️')) html += '<p class="conflict-callout">' + joined + '</p>';
+          else html += '<p>' + joined + '</p>';
+        }
+        return html;
+      }
+
+      function loadFile(fileKey, pushUrl) {
+        const key = files[fileKey] ? fileKey : 'wiki/index.md';
+        pathBar.textContent = key;
+        contentEl.innerHTML = renderMarkdown(files[key] || '# 找不到檔案', key);
+        Array.from(document.querySelectorAll('.nav-item')).forEach((btn) => {
+          btn.classList.toggle('active', btn.dataset.file === key);
+        });
+        if (pushUrl) {
+          history.replaceState(null, '', '?file=' + encodeURIComponent(key));
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      function renderSidebar(filter) {
+        sidebar.innerHTML = '';
+        const q = (filter || '').trim().toLowerCase();
+        GROUPS.forEach((g) => {
+          const matched = g.items.filter(([p, label]) => !q || p.toLowerCase().includes(q) || label.toLowerCase().includes(q));
+          if (!matched.length) return;
+          const wrap = document.createElement('div');
+          wrap.className = 'nav-group';
+          const h = document.createElement('div');
+          h.className = 'nav-group-title';
+          h.textContent = g.title;
+          wrap.appendChild(h);
+          matched.forEach(([p, label]) => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'nav-item';
+            btn.dataset.file = p;
+            btn.textContent = label;
+            btn.addEventListener('click', () => loadFile(p, true));
+            wrap.appendChild(btn);
+          });
+          sidebar.appendChild(wrap);
+        });
+      }
+
+      contentEl.addEventListener('click', (e) => {
+        const a = e.target.closest('a[data-wiki-link]');
+        if (a) {
+          e.preventDefault();
+          loadFile(a.dataset.wikiLink, true);
+        }
+      });
+
+      filterInput.addEventListener('input', (e) => {
+        renderSidebar(e.target.value);
+        loadFile(pathBar.textContent, false);
+      });
+
+      renderSidebar('');
+      const params = new URLSearchParams(location.search);
+      const initial = params.get('file') || 'wiki/index.md';
+      loadFile(initial, false);
+    })();
+  </script>
+</body>
+</html>
